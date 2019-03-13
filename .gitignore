@@ -2,3 +2,11 @@
 \.vscode/launch\.json
 
 \.vscode/settings\.json
+
+\.vs/AutoSQL/v15/\.suo
+
+\.vs/ProjectSettings\.json
+
+\.vs/slnx\.sqlite
+
+\.vs/VSWorkspaceState\.json
